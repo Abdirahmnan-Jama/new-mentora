@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Science Faculties | Modern Glass Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* Glass Morphism */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(2, 6, 23, 0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(2, 6, 23, 0.7);
+        }
+
+        /* Floating Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Icon Blur Effect */
+        .icon-blur {
+            filter: blur(8px);
+            opacity: 0.4;
+            transition: all 0.4s ease;
+        }
+
+        .faculty-card:hover .icon-blur {
+            filter: blur(4px);
+            opacity: 0.6;
+        }
+
+        /* Gradient Border */
+        .gradient-border {
+            position: relative;
+            border-radius: 1rem;
+        }
+
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
+            border-radius: inherit;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .gradient-border:hover::before {
+            opacity: 1;
+        }
+
+        /* Responsive Grid */
+        @media (min-width: 1024px) {
+            .faculty-grid {
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.6);
+            border-radius: 4px;
+        }
+
+        /* Entrance Animation */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: slideUp 0.6s ease forwards;
+        }
+        
+/* Bubble animation container */
+.bubble-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.3), rgba(147, 51, 234, 0.1));
+    backdrop-filter: blur(1px);
+    animation: float 20s infinite ease-in-out;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) translateX(0) scale(1);
+    }
+    33% {
+        transform: translateY(-100px) translateX(50px) scale(1.1);
+    }
+    66% {
+        transform: translateY(50px) translateX(-50px) scale(0.9);
+    }
+}
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Animated Background -->
+    <div class="fixed inset-0 -z-10 overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-purple-900/20"></div>
+        <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="relative z-10 pt-12 pb-8 px-6">
+        <div class="max-w-7xl mx-auto text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">
+                <span class="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    Health Science Faculties
+                </span>
+            </h1>
+            <p class="text-lg text-blue-200 max-w-2xl mx-auto">
+                Explore our comprehensive health science programs designed to shape the future of healthcare
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="relative z-10 max-w-7xl mx-auto px-6 pb-16">
+        <div class="faculty-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="faculties-container">
+            <!-- Faculties will be loaded here -->
+        </div>
+    </main>
+
+    <script>
+        // Faculty data
+        const faculties = [
+            {
+                name: "MBBS",
+                fullName: "Bachelor of Medicine, Bachelor of Surgery",
+                image: "http://static.photos/medical/640x360/10",
+                students: 1245,
+                activeClasses: 42,
+                color: "from-blue-500 to-indigo-600",
+                icon: "activity"
+            },
+            {
+                name: "CO",
+                fullName: "Clinical Officer",
+                image: "http://static.photos/medical/640x360/11",
+                students: 876,
+                activeClasses: 28,
+                color: "from-emerald-500 to-teal-600",
+                icon: "user-plus"
+            },
+            {
+                name: "MLAB",
+                fullName: "Medical Laboratory Science",
+                image: "http://static.photos/medical/640x360/12",
+                students: 654,
+                activeClasses: 22,
+                color: "from-purple-500 to-violet-600",
+                icon: "droplet"
+            },
+            {
+                name: "NUTRITION",
+                fullName: "Nutrition & Dietetics",
+                image: "http://static.photos/medical/640x360/13",
+                students: 432,
+                activeClasses: 18,
+                color: "from-amber-500 to-orange-600",
+                icon: "heart"
+            },
+            {
+                name: "NURSING",
+                fullName: "Nursing Science",
+                image: "http://static.photos/medical/640x360/14",
+                students: 987,
+                activeClasses: 35,
+                color: "from-red-500 to-pink-600",
+                icon: "thermometer"
+            },
+            {
+                name: "MIDWIFERY",
+                fullName: "Midwifery",
+                image: "http://static.photos/medical/640x360/15",
+                students: 567,
+                activeClasses: 20,
+                color: "from-fuchsia-500 to-purple-600",
+                icon: "life-buoy"
+            }
+        ];
+
+        // Create bubbles
+function createBubbles() {
+    const container = document.querySelector('.bubble-container');
+    const bubbleCount = 15;
+    
+    for (let i = 0; i < bubbleCount; i++) {
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        
+        const size = Math.random() * 100 + 50;
+        const left = Math.random() * 100;
+        const top = Math.random() * 100;
+        const delay = Math.random() * 10;
+        
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        bubble.style.left = `${left}%`;
+        bubble.style.top = `${top}%`;
+        bubble.style.animationDelay = `${delay}s`;
+        
+        container.appendChild(bubble);
+    }
+}
+
+
+        // Create faculty cards
+        function createFacultyCards() {
+            const container = document.getElementById('faculties-container');
+            
+            faculties.forEach((faculty, index) => {
+                const card = document.createElement('div');
+                card.className = `faculty-card glass-panel rounded-xl overflow-hidden gradient-border animate-in`;
+                card.style.animationDelay = `${index * 0.1}s`;
+                
+                card.innerHTML = `
+                    <div class="relative h-full flex flex-col">
+                        <!-- Faculty Image -->
+                        <div class="relative h-48 overflow-hidden">
+                            <img src="${faculty.image}" alt="${faculty.name}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+                            <div class="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent"></div>
+                            <div class="absolute bottom-4 left-4">
+                                <h2 class="text-2xl font-bold text-white">${faculty.name}</h2>
+                                <p class="text-blue-200 text-sm">${faculty.fullName}</p>
+                            </div>
+                            <div class="absolute top-4 right-4 w-16 h-16 rounded-full flex items-center justify-center bg-gradient-to-br ${faculty.color}">
+                                <i data-feather="${faculty.icon}" class="w-8 h-8 text-white"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Faculty Info -->
+                        <div class="flex-1 p-6 flex flex-col">
+                            <div class="grid grid-cols-2 gap-4 mb-6">
+                                <div class="bg-gray-800/50 rounded-lg p-3 text-center">
+                                    <p class="text-gray-400 text-sm">Students</p>
+                                    <p class="text-xl font-bold text-white">${faculty.students.toLocaleString()}</p>
+                                </div>
+                                <div class="bg-gray-800/50 rounded-lg p-3 text-center">
+                                    <p class="text-gray-400 text-sm">Active Classes</p>
+                                    <p class="text-xl font-bold text-white">${faculty.activeClasses}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-auto">
+                                <button class="w-full py-3 px-4 bg-gradient-to-r ${faculty.color} text-white font-medium rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                                    <i data-feather="book-open" class="w-4 h-4"></i>
+                                    View Classes
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Blurred Icon Background -->
+                        <div class="absolute -bottom-20 -right-20 w-40 h-40 opacity-20">
+                            <i data-feather="${faculty.icon}" class="icon-blur w-full h-full text-white"></i>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            feather.replace();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createFacultyCards();
+            
+            // Add hover effects
+            document.querySelectorAll('.faculty-card').forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    const icon = card.querySelector('.icon-blur');
+                    if (icon) {
+                        icon.style.transform = 'rotate(15deg)';
+                    }
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    const icon = card.querySelector('.icon-blur');
+                    if (icon) {
+                        icon.style.transform = 'rotate(0)';
+                    }
+                });
+            });
+        });
+    </script>
+    <script>feather.replace();</script>
+    <script>
+        // Additional interactive functionality
+document.addEventListener('DOMContentLoaded', () => {
+    // Parallax effect for background
+    window.addEventListener('mousemove', (e) => {
+        const x = e.clientX / window.innerWidth;
+        const y = e.clientY / window.innerHeight;
+        
+        document.body.style.backgroundPosition = `${x * 20}px ${y * 20}px`;
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+
+    // Card hover effects
+    const cards = document.querySelectorAll('.faculty-card');
+    cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            card.style.setProperty('--mouse-x', `${x}px`);
+            card.style.setProperty('--mouse-y', `${y}px`);
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const angle = Math.atan2(y - centerY, x - centerX) * 180 / Math.PI;
+            
+            card.querySelector('.gradient-border::before').style.background = 
+                `linear-gradient(${angle}deg, #3b82f6, #8b5cf6, #ec4899)`;
+        });
+    });
+
+    // View Classes button functionality
+    document.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', function() {
+            const facultyName = this.closest('.faculty-card').querySelector('h2').textContent;
+            alert(`Viewing classes for ${facultyName}`);
+        });
+    });
+});
+
+// Intersection Observer for animations
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('animate-in');
+            observer.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.faculty-card').forEach(card => {
+    observer.observe(card);
+});
+
+
+class FacultyCard extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: 'open' });
+    }
+
+    connectedCallback() {
+        this.render();
+    }
+
+    static get observedAttributes() {
+        return ['name', 'fullname', 'image', 'students', 'classes', 'color', 'icon'];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue !== newValue) {
+            this.render();
+        }
+    }
+
+    render() {
+        const name = this.getAttribute('name') || '';
+        const fullName = this.getAttribute('fullname') || '';
+        const image = this.getAttribute('image') || '';
+        const students = this.getAttribute('students') || '0';
+        const classes = this.getAttribute('classes') || '0';
+        const color = this.getAttribute('color') || 'from-blue-500 to-indigo-600';
+        const icon = this.getAttribute('icon') || 'activity';
+
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: block;
+                    margin-bottom: 1.5rem;
+                }
+                
+                .faculty-card {
+                    background: rgba(15, 23, 42, 0.6);
+                    backdrop-filter: blur(16px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 8px 32px rgba(2, 6, 23, 0.5);
+                    border-radius: 0.75rem;
+                    overflow: hidden;
+                    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                
+                .faculty-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 12;
+            }
+            
+                    </style>`;
+    }
+}
+
+    
+    </script>
+<script src="https://huggingface.co/deepsite/deepsite-badge.js"></script>
+</body>
+</html>

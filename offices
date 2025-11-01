@@ -1,0 +1,25 @@
+finance office
+admission office
+students office
+exams office
+departments:
+   medicine
+   -clinical medicine
+   -MLAB
+   -nursing
+   -pharmacy
+   -public health
+   -midwifery
+   -MBBS
+   engineering
+   -civil engineering
+   law
+   -international law
+   -criminal law
+   Information technology
+   -software engineering
+   -networking
+   -cyber security
+   business administration
+   -marketing
+   -human resource management

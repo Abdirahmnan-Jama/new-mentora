@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentora - Advanced Student Admission Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --card-glow: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.3) 0%, rgba(15, 23, 42, 0) 70%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--card-glow);
+            pointer-events: none;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        
+        .bg-grid-pattern {
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+                radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+        }
+        
+        .glow-text {
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+        
+        .glow-icon {
+            filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.5));
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+        
+        .status-pending {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        
+        .status-approved {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .hover-effect {
+            transition: all 0.3s ease;
+            transform-origin: center;
+        }
+        
+        .hover-effect:hover {
+            transform: scale(1.05);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
+        
+        /* Animations */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+            }
+            50% {
+                transform: translateY(-8px) translateX(4px);
+            }
+        }
+        
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.8;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 6s ease-in-out infinite;
+        }
+        
+        /* Table styles */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .data-table thead th {
+            position: sticky;
+            top: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            z-index: 10;
+        }
+        
+        .data-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            color: #94a3b8;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .data-table tr:hover td {
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        /* Form styles */
+        .form-input {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 1024px) {
+            .glass-card {
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .glass-card {
+                margin: 0 1rem;
+            }
+            
+            .data-table {
+                font-size: 0.875rem;
+            }
+            
+            .status-badge {
+                font-size: 0.625rem;
+                padding: 0.25rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-grid-pattern min-h-screen overflow-x-hidden">
+    <div id="app" class="flex min-h-screen">
+        <!-- Sidebar -->
+        
+        
+        <!-- Main Content -->
+            <main class="max-w-7xl mx-auto px-6 pb-12">
+
+            <!-- Navbar -->
+            <header class="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-md border-b border-slate-800/50">
+                <div class="flex items-center justify-between p-4">
+                    <div class="flex items-center lg:hidden">
+                        <button id="mobileMenuButton" class="p-2 rounded-lg text-slate-300 hover:bg-slate-800/30 hover:text-white transition">
+                            <i data-feather="menu" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="hidden md:flex items-center space-x-4">
+                        <div class="relative max-w-md w-full">
+                            <i data-feather="search" class="absolute left-3 top-3 text-slate-400"></i>
+                            <input type="text" placeholder="Search..." class="pl-10 pr-4 py-2 rounded-lg bg-slate-800/50 border border-slate-700/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none transition text-white w-full">
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <button class="p-2 rounded-lg text-slate-300 hover:bg-slate-800/30 hover:text-white transition relative">
+                            <i data-feather="bell" class="w-5 h-5"></i>
+                            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
+                        
+                        <div class="hidden md:flex items-center space-x-2">
+                            <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center">
+                                <i data-feather="user" class="w-4 h-4 text-white"></i>
+                            </div>
+                            <span class="text-sm font-medium text-white">Admin</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <main class="flex-1 p-6 overflow-y-auto">
+                <!-- Dashboard Header -->
+                <div class="mb-8" data-aos="fade-up">
+                    <h1 class="text-4xl md:text-5xl font-bold text-white mb-2">Student <span class="gradient-text">Admission</span></h1>
+                    <p class="text-slate-400 max-w-2xl">Manage student admissions with advanced analytics and real-time tracking. Streamline your enrollment process with our powerful tools.</p>
+                </div>
+
+                
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" data-aos="fade-up" data-aos-delay="100">
+                    <div class="glass-card p-6 hover-effect">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="relative">
+                                <div class="absolute inset-0 bg-indigo-500 rounded-full opacity-20 blur-lg animate-pulse-slow"></div>
+                                <div class="relative z-10 w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                    <i data-feather="users" class="w-5 h-5 text-indigo-300 glow-icon"></i>
+                                </div>
+                            </div>
+                            <span class="text-green-400 text-sm font-medium bg-green-900/20 px-2 py-1 rounded-full">+12%</span>
+                        </div>
+                        <h3 class="text-slate-300 text-sm font-medium mb-1">Total Students</h3>
+                        <p class="text-white text-2xl font-bold mb-2" id="totalStudents">0</p>
+                        <div class="h-1 bg-indigo-500/20 rounded-full">
+                            <div class="h-1 bg-indigo-500 rounded-full" style="width: 75%"></div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 hover-effect">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="relative">
+                                <div class="absolute inset-0 bg-purple-500 rounded-full opacity-20 blur-lg animate-pulse-slow"></div>
+                                <div class="relative z-10 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                    <i data-feather="user-plus" class="w-5 h-5 text-purple-300 glow-icon"></i>
+                                </div>
+                            </div>
+                            <span class="text-blue-400 text-sm font-medium bg-blue-900/20 px-2 py-1 rounded-full">+8%</span>
+                        </div>
+                        <h3 class="text-slate-300 text-sm font-medium mb-1">New Admissions</h3>
+                        <p class="text-white text-2xl font-bold mb-2" id="newAdmissions">0</p>
+                        <div class="h-1 bg-purple-500/20 rounded-full">
+                            <div class="h-1 bg-purple-500 rounded-full" style="width: 65%"></div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 hover-effect">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="relative">
+                                <div class="absolute inset-0 bg-pink-500 rounded-full opacity-20 blur-lg animate-pulse-slow"></div>
+                                <div class="relative z-10 w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
+                                    <i data-feather="check-circle" class="w-5 h-5 text-pink-300 glow-icon"></i>
+                                </div>
+                            </div>
+                            <span class="text-yellow-400 text-sm font-medium bg-yellow-900/20 px-2 py-1 rounded-full">95%</span>
+                        </div>
+                        <h3 class="text-slate-300 text-sm font-medium mb-1">Approved</h3>
+                        <p class="text-white text-2xl font-bold mb-2" id="approvedCount">0</p>
+                        <div class="h-1 bg-pink-500/20 rounded-full">
+                            <div class="h-1 bg-pink-500 rounded-full" style="width: 95%"></div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card p-6 hover-effect">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="relative">
+                                <div class="absolute inset-0 bg-orange-500 rounded-full opacity-20 blur-lg animate-pulse-slow"></div>
+                                <div class="relative z-10 w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                                    <i data-feather="clock" class="w-5 h-5 text-orange-300 glow-icon"></i>
+                                </div>
+                            </div>
+                            <span class="text-red-400 text-sm font-medium bg-red-900/20 px-2 py-1 rounded-full">5</span>
+                        </div>
+                        <h3 class="text-slate-300 text-sm font-medium mb-1">Pending</h3>
+                        <p class="text-white text-2xl font-bold mb-2" id="pendingCount">0</p>
+                        <div class="h-1 bg-orange-500/20 rounded-full">
+                            <div class="h-1 bg-orange-500 rounded-full" style="width: 15%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions and Recent Activities -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Quick Actions -->
+                    <div class="lg:col-span-2" data-aos="fade-up" data-aos-delay="200">
+                        <div class="glass-card p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-xl font-bold text-white">Quick Actions</h2>
+                                <button class="text-slate-400 hover:text-white transition">
+                                    <i data-feather="more-horizontal" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button onclick="showAddStudentModal()" class="glass-card p-4 hover-effect group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative">
+                                            <div class="absolute inset-0 bg-green-500 rounded-full opacity-20 blur-lg group-hover:opacity-30 transition-opacity"></div>
+                                            <div class="relative z-10 w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                                                <i data-feather="user-plus" class="w-5 h-5 text-green-300 group-hover:text-green-200 transition"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-white font-medium">Add Student</h3>
+                                            <p class="text-xs text-slate-400">New admission</p>
+                                        </div>
+                                    </div>
+                                </button>
+                                
+                                <button onclick="exportData()" class="glass-card p-4 hover-effect group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative">
+                                            <div class="absolute inset-0 bg-blue-500 rounded-full opacity-20 blur-lg group-hover:opacity-30 transition-opacity"></div>
+                                            <div class="relative z-10 w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                                <i data-feather="download" class="w-5 h-5 text-blue-300 group-hover:text-blue-200 transition"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-white font-medium">Export Data</h3>
+                                            <p class="text-xs text-slate-400">CSV, Excel, PDF</p>
+                                        </div>
+                                    </div>
+                                </button>
+                                
+                                <button onclick="showBulkImportModal()" class="glass-card p-4 hover-effect group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative">
+                                            <div class="absolute inset-0 bg-purple-500 rounded-full opacity-20 blur-lg group-hover:opacity-30 transition-opacity"></div>
+                                            <div class="relative z-10 w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                                <i data-feather="upload" class="w-5 h-5 text-purple-300 group-hover:text-purple-200 transition"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-white font-medium">Bulk Import</h3>
+                                            <p class="text-xs text-slate-400">Upload spreadsheet</p>
+                                        </div>
+                                    </div>
+                                </button>
+                                
+                                <button onclick="generateReport()" class="glass-card p-4 hover-effect group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative">
+                                            <div class="absolute inset-0 bg-orange-500 rounded-full opacity-20 blur-lg group-hover:opacity-30 transition-opacity"></div>
+                                            <div class="relative z-10 w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                                                <i data-feather="file-text" class="w-5 h-5 text-orange-300 group-hover:text-orange-200 transition"></i>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-white font-medium">Generate Report</h3>
+                                            <p class="text-xs text-slate-400">Analytics & stats</p>
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activities -->
+                    <div data-aos="fade-up" data-aos-delay="300">
+                        <div class="glass-card p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h2 class="text-xl font-bold text-white">Recent Activities</h2>
+                                <button class="text-slate-400 hover:text-white transition">
+                                    <i data-feather="more-horizontal" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+                                        <i data-feather="user-plus" class="w-4 h-4 text-indigo-300"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-white">New student admission</p>
+                                        <p class="text-xs text-slate-400">John Doe registered</p>
+                                        <p class="text-xs text-slate-500 mt-1">2 minutes ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                                        <i data-feather="check-circle" class="w-4 h-4 text-green-300"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-white">Application approved</p>
+                                        <p class="text-xs text-slate-400">Sarah Miller</p>
+                                        <p class="text-xs text-slate-500 mt-1">1 hour ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                                        <i data-feather="x-circle" class="w-4 h-4 text-red-300"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-white">Application rejected</p>
+                                        <p class="text-xs text-slate-400">Alex Johnson</p>
+                                        <p class="text-xs text-slate-500 mt-1">3 hours ago</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                        <i data-feather="edit" class="w-4 h-4 text-blue-300"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm text-white">Profile updated</p>
+                                        <p class="text-xs text-slate-400">Michael Brown</p>
+                                        <p class="text-xs text-slate-500 mt-1">5 hours ago</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Table -->
+                <div class="glass-card p-6" data-aos="fade-up" data-aos-delay="400">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                        <h2 class="text-xl font-bold text-white">Student Records</h2>
+                        <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                            <div class="relative flex-1">
+                                <i data-feather="search" class="absolute left-3 top-3 text-slate-400"></i>
+                                <input type="text" id="searchInput" placeholder="Search students..." 
+                                       class="pl-10 pr-4 py-2 rounded-lg bg-slate-800/70 border border-slate-700/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none transition text-white w-full">
+                            </div>
+                            <select id="filterStatus" class="px-4 py-2 rounded-lg bg-slate-800/70 border border-slate-700/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none transition text-white">
+                                <option value="">All Status</option>
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            <button onclick="showAddStudentModal()" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition whitespace-nowrap">
+                                <i data-feather="plus" class="w-4 h-4 inline mr-2"></i>
+                                Add Student
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="data-table w-full">
+                            <thead>
+                                <tr>
+                                    <th class="text-left">Student ID</th>
+                                    <th class="text-left">Full Name</th>
+                                    <th class="text-left">Email</th>
+                                    <th class="text-left">Department</th>
+                                    <th class="text-left">Status</th>
+                                    <th class="text-left">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTableBody">
+                                <!-- Students will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="glass-card p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto" data-aos="zoom-in">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white">New Student Registration</h2>
+                <button onclick="hideAddStudentModal()" class="text-slate-400 hover:text-white transition">
+                    <i data-feather="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <form id="addStudentForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-medium">First Name</label>
+                        <input type="text" name="firstName" required class="form-input">
+                    </div>
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-medium">Last Name</label>
+                        <input type="text" name="lastName" required class="form-input">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-slate-300 mb-2 font-medium">Email Address</label>
+                    <input type="email" name="email" required class="form-input">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-medium">Department</label>
+                        <select name="department" required class="form-input">
+                            <option value="">Select Department</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Business Administration">Business Administration</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Medicine">Medicine</option>
+                            <option value="Arts & Humanities">Arts & Humanities</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-medium">Phone Number</label>
+                        <input type="tel" name="phone" required class="form-input">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-medium">Date of Birth</label>
+                        <input type="date" name="dob" class="form-input">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-medium">Gender</label>
+                        <select name="gender" class="form-input">
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-slate-300 mb-2 font-medium">Address</label>
+                    <textarea name="address" rows="2" class="form-input"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-medium">City</label>
+                        <input type="text" name="city" class="form-input">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-medium">Country</label>
+                        <input type="text" name="country" class="form-input">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-medium">Education Level</label>
+                        <select name="educationLevel" class="form-input">
+                            <option value="">Select Education</option>
+                            <option value="High School">High School</option>
+                            <option value="Bachelor's Degree">Bachelor's Degree</option>
+                            <option value="Master's Degree">Master's Degree</option>
+                            <option value="PhD">PhD</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-slate-300 mb-2 font-medium">Previous Institution</label>
+                        <input type="text" name="previousInstitution" class="form-input">
+                    </div>
+                </div>
+                
+                <div class="pt-4 border-t border-slate-800/50">
+                    <div class="flex justify-end gap-4">
+                        <button type="button" onclick="hideAddStudentModal()" class="px-6 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-white transition">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-6 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white transition flex items-center">
+                            <i data-feather="user-plus" class="w-4 h-4 mr-2"></i>
+                            Register Student
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+     <script src="admin.js"></script>
+</body>
+</html>

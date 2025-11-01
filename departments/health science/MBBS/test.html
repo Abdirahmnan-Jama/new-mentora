@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedGlass - MBBS Faculty Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        /* Glass panel styles */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
+            border-radius: 16px;
+        }
+
+        .glass-card:hover {
+            background: rgba(15, 23, 42, 0.8);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Animated gradient border */
+        .gradient-border {
+            position: relative;
+            z-index: 1;
+        }
+
+        .gradient-border::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #6366f1, #8b5cf6, #ec4899);
+            z-index: -1;
+            border-radius: 18px;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .glass-card:hover .gradient-border::before {
+            opacity: 1;
+        }
+        /* Faculty image styling */
+        .faculty-img {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            aspect-ratio: 1/1;
+        }
+
+        .faculty-img::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(147, 51, 234, 0.1));
+            z-index: 1;
+        }
+
+        .faculty-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .glass-card:hover .faculty-img img {
+            transform: scale(1.05);
+        }
+
+        /* Stats styling */
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        /* Performance bar */
+        .performance-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .performance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+
+        /* Custom tab styling */
+        .tab-item {
+            position: relative;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-item.active {
+            color: white;
+        }
+
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            border-radius: 3px 3px 0 0;
+        }
+
+
+        /* Bubble animation container */
+        .bubble-container {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.1), rgba(147, 51, 234, 0.05));
+            backdrop-filter: blur(1px);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0) scale(1);
+            }
+            33% {
+                transform: translateY(-100px) translateX(50px) scale(1.1);
+            }
+            66% {
+                transform: translateY(50px) translateX(-50px) scale(0.9);
+            }
+        }
+
+        /* Class image styling */
+        .class-img {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+
+        .class-img::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(147, 51, 234, 0.1));
+            z-index: 1;
+        }
+
+        .class-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .glass-card:hover .class-img img {
+            transform: scale(1.05);
+        }
+
+        /* Stats styling */
+        .stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.5);
+        }
+
+        /* Animation classes */
+        .animate-slide-up {
+            animation: slideInUp 0.6s ease forwards;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .glass-card {
+                margin: 0 10px;
+            }
+            
+            .class-img {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen overflow-x-hidden">
+    <!-- Animated Background -->
+    <div class="bubble-container"></div>
+
+    <!-- Header -->
+    <header class="px-6 py-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-white">
+                        <span class="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                            MedGlass Faculty
+                        </span>
+                    </h1>
+                    <p class="text-gray-400">MBBS Class Management Portal</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="glass-card px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-500/10 transition-all">
+                        <i data-feather="bell"></i>
+                        <span>Notifications</span>
+                    </button>
+                    <div class="glass-card p-2 rounded-full">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 flex items-center justify-center text-white font-bold">
+                            DR
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 pb-12">
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="glass-card gradiant-border p-6 flex items-center gap-4 hover:scale-[1.02] transition-transform">
+                <div class="p-3 rounded-lg bg-indigo-500/20">
+                    <i data-feather="book-open" class="text-indigo-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Classes</h3>
+                    <p class="text-sm text-gray-400">8 Active Classes</p>
+                </div>
+            </div>
+            <div class="glass-card gradiant-border p-6 flex items-center gap-4 hover:scale-[1.02] transition-transform">
+                <div class="p-3 rounded-lg bg-emerald-500/20">
+                    <i data-feather="users" class="text-emerald-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Students</h3>
+                    <p class="text-sm text-gray-400">248 Total Students</p>
+                </div>
+            </div>
+            <div class="glass-card gradiant-border p-6 flex items-center gap-4 hover:scale-[1.02] transition-transform">
+                <div class="p-3 rounded-lg bg-amber-500/20">
+                    <i data-feather="calendar" class="text-amber-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Sessions</h3>
+                    <p class="text-sm text-gray-400">12 This Week</p>
+                </div>
+            </div>
+            <div class="glass-card gradiant-border p-6 flex items-center gap-4 hover:scale-[1.02] transition-transform">
+                <div class="p-3 rounded-lg bg-rose-500/20">
+                    <i data-feather="activity" class="text-rose-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold">Performance</h3>
+                    <p class="text-sm text-gray-400">89% Avg Score</p>
+                </div>
+            </div>
+        </div>
+
+        Faculty Profile
+        <div class="glass-card gradiant-border p-6 mb-8 animate-slide-up" style="animation-delay: 0.1s">
+            <div class="flex flex-col md:flex-row items-center gap-6">
+                <div class="class-img w-32 h-32 md:w-40 md:h-40">
+                    <img src="http://static.photos/medical/640x360/7" alt="Dr. Sarah Johnson" />
+                </div>
+                <div class="flex-1">
+                    <h2 class="text-2xl font-bold">Dr. Sarah Johnson</h2>
+                    <p class="text-indigo-400 mb-4">Professor of Anatomy</p>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs">MBBS, MD</span>
+                        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs">15 Years Exp</span>
+                        <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs">Anatomy</span>
+                        <span class="px-3 py-1 bg-amber-500/20 text-amber-300 rounded-full text-xs">Physiology</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="stat-item">
+                            <div class="flex items-center gap-2">
+                                <i data-feather="book" class="text-indigo-400"></i>
+                                <span>Classes</span>
+                            </div>
+                            <p class="text-xl font-bold mt-1">6</p>
+                        </div>
+                        <div class="stat-item">
+                            <div class="flex items-center gap-2">
+                                <i data-feather="users" class="text-emerald-400"></i>
+                                <span>Students</span>
+                            </div>
+                            <p class="text-xl font-bold mt-1">248</p>
+                        </div>
+                        <div class="stat-item">
+                            <div class="flex items-center gap-2">
+                                <i data-feather="file-text" class="text-amber-400"></i>
+                                <span>Research</span>
+                            </div>
+                            <p class="text-xl font-bold mt-1">42</p>
+                        </div>
+                        <div class="stat-item">
+                            <div class="flex items-center gap-2">
+                                <i data-feather="award" class="text-rose-400"></i>
+                                <span>Awards</span>
+                            </div>
+                            <p class="text-xl font-bold mt-1">8</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Faculty Dashboard -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            
+          
+
+            <!-- Performance Metrics -->
+            <div class="glass-card gradiant-border p-6 lg:col-span-2 animate-slide-up" style="animation-delay: 0.2s">
+                <h2 class="text-xl font-bold mb-4">Performance Metrics</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="stat-item">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-gray-400">Average Attendance</span>
+                            <span class="text-sm font-bold text-white">87%</span>
+                        </div>
+                        <div class="performance-bar">
+                            <div class="performance-fill" style="width: 87%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-gray-400">Pass Percentage</span>
+                            <span class="text-sm font-bold text-white">92%</span>
+                        </div>
+                        <div class="performance-bar">
+                            <div class="performance-fill" style="width: 92%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-gray-400">Student Satisfaction</span>
+                            <span class="text-sm font-bold text-white">94%</span>
+                        </div>
+                        <div class="performance-bar">
+                            <div class="performance-fill" style="width: 94%"></div>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-gray-400">Research Output</span>
+                            <span class="text-sm font-bold text-white">78%</span>
+                        </div>
+                        <div class="performance-bar">
+                            <div class="performance-fill" style="width: 78%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-card p-4 rounded-xl">
+                        <canvas id="attendanceChart" height="200"></canvas>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl">
+                        <canvas id="performanceChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card gradiant-border p-6 lg:col-span-1 animate-slide-up" style="animation-delay: 0.1s">
+                <div class="flex flex-col items-center gap-4">
+                    <div class="faculty-img w-40 h-40">
+                        <img src="http://static.photos/medical/640x360/7" alt="Dr. Sarah Johnson" />
+                    </div>
+                    <div class="text-center">
+                        <h2 class="text-2xl font-bold">Dr. Sarah Johnson</h2>
+                        <p class="text-indigo-400">Professor of Anatomy</p>
+                        <div class="flex justify-center gap-2 mt-2">
+                            <span class="px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs">MBBS, MD</span>
+                            <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-xs">15 Years Exp</span>
+                        </div>
+                    </div>
+                    <div class="w-full mt-4 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Classes</span>
+                            <span class="font-bold">6</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Students</span>
+                            <span class="font-bold">248</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">Research Papers</span>
+                            <span class="font-bold">42</span>
+                        </div>
+                    </div>
+                    <button class="w-full mt-4 glass-card py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium hover:opacity-90 transition-opacity">
+                        View Full Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Class Management -->
+        <div class="glass-card gradiant-border p-6 mb-8 animate-slide-up" style="animation-delay: 0.2s">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">Class Management</h2>
+                <div class="flex gap-3">
+                    <div class="relative">
+                        <select class="glass-card appearance-none pl-4 pr-10 py-2 rounded-lg bg-transparent border border-gray-700 focus:border-indigo-500 focus:outline-none">
+                            <option>All Years</option>
+                            <option>Year 1</option>
+                            <option>Year 2</option>
+                            <option>Year 3</option>
+                            <option>Year 4</option>
+                            <option>Year 5</option>
+                        </select>
+                        <i data-feather="chevron-down" class="absolute right-3 top-2.5 text-gray-400"></i>
+                    </div>
+                    <div class="relative">
+                        <select class="glass-card appearance-none pl-4 pr-10 py-2 rounded-lg bg-transparent border border-gray-700 focus:border-indigo-500 focus:outline-none">
+                            <option>All Semesters</option>
+                            <option>Semester 1</option>
+                            <option>Semester 2</option>
+                        </select>
+                        <i data-feather="chevron-down" class="absolute right-3 top-2.5 text-gray-400"></i>
+                    </div>
+                    <button class="glass-card px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
+                        <i data-feather="filter" class="w-4 h-4"></i>
+                        Filter
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Class Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Class Card 1 -->
+                <div class="glass-card gradiant-border p-0 overflow-hidden">
+                    <div class="flex flex-col md:flex-row">
+                        <div class="p-6 flex-1">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold">MBBS Y1</h3>
+                                    <p class="text-indigo-400">SEM 2</p>
+                                </div>
+                                <span class="px-2 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs">Core</span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-4">
+                                <div class="flex items-center gap-2 text-sm">
+                                    <i data-feather="users" class="text-emerald-400 w-4 h-4"></i>
+                                    <span>42 Students</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <i data-feather="book" class="text-amber-400 w-4 h-4"></i>
+                                    <span>6 courses</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <i data-feather="clock" class="text-rose-400 w-4 h-4"></i>
+                                    <span>Mon/Wed/Fri 9-11 AM</span>
+                                </div>
+                            </div>
+                            
+                            <button class="w-full glass-card mt-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                                <i data-feather="eye" class="w-4 h-4"></i>
+                                View Class
+                            </button>
+                        </div>
+                        <div class="class-img w-full md:w-40">
+                            <img src="http://static.photos/medical/320x240/1" alt="Anatomy Class" />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Class Card 2 -->
+                <div class="glass-card gradiant-border p-0 overflow-hidden">
+                    <div class="flex flex-col md:flex-row">
+                        <div class="p-6 flex-1">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold">MBBS Y2</h3>
+                                    <p class="text-emerald-400">Semester 3</p>
+                                </div>
+                                <span class="px-2 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs">Lab</span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-4">
+                                <div class="flex items-center gap-2 text-sm">
+                                    <i data-feather="users" class="text-emerald-400 w-4 h-4"></i>
+                                    <span>36 Students</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <i data-feather="book" class="text-amber-400 w-4 h-4"></i>
+                                    <span>6 courses</span>
+                                </div>
+                                <div class="flex items-center gap-2 text-sm">
+                                    <i data-feather="clock" class="text-rose-400 w-4 h-4"></i>
+                                    <span>Tue/Thu 1-4 PM</span>
+                                </div>
+                            </div>
+                            
+                            <button class="w-full glass-card mt-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                                <i data-feather="eye" class="w-4 h-4"></i>
+                                View Class
+                            </button>
+                        </div>
+                        <div class="class-img w-full md:w-40">
+                            <img src="http://static.photos/medical/320x240/2" alt="Physiology Lab" />
+                        </div>
+                    </div>
+                </div>
+                
+                
+            
+            <!-- Pagination -->
+            <div class="flex justify-center items-center mt-8 gap-2">
+                <button class="glass-card p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                    <i data-feather="chevron-left" class="w-4 h-4"></i>
+                </button>
+                <button class="glass-card p-2 rounded-lg bg-indigo-500 text-white">
+                    1
+                </button>
+                <button class="glass-card p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                    2
+                </button>
+                <button class="glass-card p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                    3
+                </button>
+                <button class="glass-card p-2 rounded-lg hover:bg-gray-700 transition-colors">
+                    <i data-feather="chevron-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Create bubbles
+        function createBubbles() {
+            const container = document.querySelector('.bubble-container');
+            const bubbleCount = 15;
+            
+            for (let i = 0; i < bubbleCount; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                
+                const size = Math.random() * 100 + 50;
+                const left = Math.random() * 100;
+                const top = Math.random() * 100;
+                const delay = Math.random() * 10;
+                
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${left}%`;
+                bubble.style.top = `${top}%`;
+                bubble.style.animationDelay = `${delay}s`;
+                
+                container.appendChild(bubble);
+            }
+        }
+
+        // Animate cards on scroll
+        function animateOnScroll() {
+            const cards = document.querySelectorAll('.glass-card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = 1;
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            cards.forEach(card => {
+                observer.observe(card);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createBubbles();
+            animateOnScroll();
+            feather.replace();
+            
+            // Add pulse animation to view class buttons
+            setTimeout(() => {
+                document.querySelectorAll('button').forEach(btn => {
+                    if (btn.textContent.includes('View Class')) {
+                        btn.classList.add('animate-pulse');
+                    }
+                });
+            }, 1000);
+        });
+
+         // Initialize charts
+        function initCharts() {
+            // Attendance Chart
+            const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+            new Chart(attendanceCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Attendance Rate',
+                        data: [82, 85, 88, 87, 89, 92],
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        borderColor: 'rgb(99, 102, 241)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 70,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Performance Chart
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            new Chart(performanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+                    datasets: [{
+                        label: 'Average Score',
+                        data: [78, 85, 88, 82, 90],
+                        backgroundColor: [
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(124, 58, 237, 0.7)',
+                            'rgba(109, 40, 217, 0.7)',
+                            'rgba(91, 33, 182, 0.7)',
+                            'rgba(76, 29, 149, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(139, 92, 246, 1)',
+                            'rgba(124, 58, 237, 1)',
+                            'rgba(109, 40, 217, 1)',
+                            'rgba(91, 33, 182, 1)',
+                            'rgba(76, 29, 149, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            min: 70,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#94a3b8'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createBubbles();
+            initCharts();
+            
+            // Animate performance fills
+            setTimeout(() => {
+                document.querySelectorAll('.performance-fill').forEach(bar => {
+                    const width = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 200);
+                });
+            }, 500);
+            
+            feather.replace();
+        });
+    </script>
+    <script>feather.replace();</script>
+<script src="https://huggingface.co/deepsite/deepsite-badge.js"></script>
+</body>
+</html>

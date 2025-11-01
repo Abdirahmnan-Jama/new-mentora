@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Auth Portal | Modern Glass Login</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="components/navbar.js"></script>
+    <script src="components/bubble-background.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.glass-panel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(99, 102, 241, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.5);
+}
+
+/* Animations */
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) translateX(0);
+    }
+    50% {
+        transform: translateY(-20px) translateX(10px);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.6;
+    }
+    50% {
+        opacity: 0.9;
+    }
+}
+
+.animate-pulse-slow {
+    animation: pulse 6s ease-in-out infinite;
+}
+    </style>
+</head>
+<body class="bg-gray-900 min-h-screen overflow-x-hidden">
+    <bubble-background></bubble-background>
+    
+    <main class="container mx-auto min-h-screen flex items-center justify-center p-4 relative z-10">
+        <div class="flex flex-col lg:flex-row w-full max-w-6xl rounded-3xl overflow-hidden shadow-2xl bg-gray-800/50 backdrop-blur-xl border border-gray-700/30">
+            <!-- Animated Sidebar -->
+            <div class="w-full lg:w-1/2 h-64 lg:h-auto relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 z-10"></div>
+                <div id="slideShow" class="absolute inset-0 bg-gray-800 transition-all duration-1000 ease-in-out">
+                    <!-- Slides will be injected by JavaScript -->
+                </div>
+                <div class="absolute bottom-8 left-8 z-20">
+                    <h1 class="text-white text-4xl font-bold drop-shadow-lg">Welcome Back</h1>
+                    <p class="text-indigo-300 mt-2">Select your department to continue</p>
+                </div>
+                <div class="absolute top-8 right-8 flex space-x-2">
+                    <button id="prevSlide" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition text-white">
+                        <i data-feather="chevron-left"></i>
+                    </button>
+                    <button id="nextSlide" class="p-2 rounded-full bg-white/10 hover:bg-white/20 transition text-white">
+                        <i data-feather="chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Glass Login Form -->
+            <div class="w-full lg:w-1/2 p-10 flex flex-col justify-center">
+                <div class="text-center mb-10">
+                    <div class="relative w-16 h-16 mx-auto mb-6">
+                        <div class="absolute inset-0 bg-indigo-600 rounded-full opacity-80 blur-lg"></div>
+                        <i data-feather="unlock" class="w-12 h-12 text-white relative z-10 mx-auto"></i>
+                    </div>
+                    <h2 class="text-3xl font-bold text-white mt-4">Department Portal</h2>
+                    <p class="text-gray-400 mt-2">Choose your access level</p>
+                </div>
+
+                <form class="space-y-6" id="loginForm">
+                    <div class="space-y-1">
+                        <label class="text-gray-300 font-medium">Select Department</label>
+                        <div class="relative">
+                            <i data-feather="grid" class="absolute left-3 top-3 text-indigo-400"></i>
+                            <select class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-700/70 border border-gray-600/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none transition appearance-none text-white">
+                                <option value="" disabled selected>Select your department</option>
+                                <option value="finance">Finance</option>
+                                <option value="admin">Admin</option>
+                                <option value="exams">Exams</option>
+                                <option value="departments">Departments</option>
+                            </select>
+                            <i data-feather="chevron-down" class="absolute right-3 top-3 text-gray-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-gray-300 font-medium">Access Code</label>
+                        <div class="relative">
+                            <i data-feather="key" class="absolute left-3 top-3 text-indigo-400"></i>
+                            <input type="password" placeholder="••••••••" 
+                                   class="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-700/70 border border-gray-600/50 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 outline-none transition text-white">
+                            <button type="button" class="absolute right-3 top-3 text-indigo-400 hover:text-indigo-300">
+                                <i data-feather="eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="remember" class="h-4 w-4 text-indigo-500 rounded border-gray-500 focus:ring-indigo-400">
+                            <label for="remember" class="ml-2 text-gray-300">Remember device</label>
+                        </div>
+                        <a href="#" class="text-indigo-400 hover:text-indigo-300 text-sm">Need help?</a>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 group">
+                        <span class="flex items-center justify-center gap-2">
+                            <span>Authenticate</span>
+                            <i data-feather="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                        </span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+    // Image slideshow for sidebar
+    const slides = [
+        'http://static.photos/technology/1200x630/1',
+        'http://static.photos/finance/1200x630/2',
+        'http://static.photos/education/1200x630/3',
+        'http://static.photos/workspace/1200x630/4'
+    ];
+    
+    const slideShow = document.getElementById('slideShow');
+    const nextBtn = document.getElementById('nextSlide');
+    const prevBtn = document.getElementById('prevSlide');
+    
+    let currentSlide = 0;
+    
+    function showSlide(index) {
+        if (!slideShow) return;
+        slideShow.style.backgroundImage = `url(${slides[index]})`;
+        slideShow.style.backgroundSize = 'cover';
+        slideShow.style.backgroundPosition = 'center';
+    }
+    
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+        animateSlideTransition('right');
+    }
+    
+    function prevSlide() {
+        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+        showSlide(currentSlide);
+        animateSlideTransition('left');
+    }
+    
+    function animateSlideTransition(direction) {
+        if (!slideShow) return;
+        gsap.fromTo(slideShow, 
+            { opacity: 0, x: direction === 'right' ? 50 : -50 },
+            { opacity: 1, x: 0, duration: 0.8, ease: 'power2.out' }
+        );
+    }
+    
+    if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+    if (prevBtn) prevBtn.addEventListener('click', prevSlide);
+    
+    // Initialize first slide
+    showSlide(currentSlide);
+    
+    // Auto slide change every 5 seconds
+    if (slideShow) setInterval(nextSlide, 5000);
+    
+    // Password visibility toggle
+    document.querySelectorAll('[data-feather="eye"]').forEach(eyeIcon => {
+        eyeIcon.addEventListener('click', (e) => {
+            const passwordInput = e.target.closest('.relative').querySelector('input');
+            const isPassword = passwordInput.type === 'password';
+            
+            passwordInput.type = isPassword ? 'text' : 'password';
+            e.target.setAttribute('data-feather', isPassword ? 'eye-off' : 'eye');
+            feather.replace();
+        });
+    });
+    
+    // Form submission
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const department = loginForm.querySelector('select').value;
+            if (department) {
+                window.location.href = `${department}.html`;
+            }
+        });
+    }
+});
+    </script>
+    <script>feather.replace();</script>
+</body>
+</html>

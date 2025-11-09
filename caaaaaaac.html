@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Import Students | Mentora</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        },
+                        secondary: {
+                            400: '#d946ef',
+                            500: '#c026d3',
+                            600: '#a21caf',
+                            700: '#86198f',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #10b981;     /* Emerald 500 */
+            --secondary: #c026d3;   /* Fuchsia 600 */
+            --bg: #0f172a;          /* Slate 900 */
+            --panel: rgba(255,255,255,0.06);
+        }
+
+        * { box-sizing: border-box; }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-panel:hover {
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-input {
+            background: rgba(15, 23, 42, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 0.875rem 1.25rem;
+            width: 100%;
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+        }
+
+        .drop-zone {
+            background: rgba(255,255,255,0.04);
+            border: 2px dashed rgba(255,255,255,0.18);
+            transition: all 0.25s ease;
+        }
+        .drop-zone.dragover {
+            background: rgba(16,185,129,0.08);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15) inset;
+        }
+
+        #toast.show {
+            opacity: 1 !important;
+            transform: translateY(0);
+        }
+
+        .progress {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        .progress > div {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.25s ease;
+        }
+
+        .row-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 14px;
+            transition: all 0.25s ease;
+        }
+        .row-card:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-1px);
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(99, 102, 241, 0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(16, 185, 129, 0.35); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.55); }
+    </style>
+</head>
+
+<body class="min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="glass-panel rounded-2xl p-6 mb-6" data-aos="fade-up">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-primary-600/20 flex items-center justify-center">
+                        <i data-feather="upload-cloud" class="w-6 h-6 text-primary-400"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Bulk Student Import</h1>
+                        <p class="text-gray-400 text-sm">Upload an Excel sheet, assign profile pictures, then import all at once</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="index.html" class="action-btn">
+                        <i data-feather="arrow-left" class="w-4 h-4"></i>
+                        Back to Registration
+                    </a>
+                    <button id="btnDownloadSample" class="action-btn">
+                        <i data-feather="download" class="w-4 h-4"></i>
+                        Sample Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1: Upload Excel -->
+        <div class="glass-panel rounded-2xl p-6 mb-6" data-aos="fade-up" data-aos-delay="50">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 rounded-lg bg-primary-600/20 flex items-center justify-center">
+                    <i data-feather="file-text" class="w-5 h-5 text-primary-400"></i>
+                </div>
+                <h2 class="text-xl font-semibold text-white">Step 1 — Upload Excel File</h2>
+            </div>
+
+            <div id="dropZone" class="drop-zone rounded-xl p-8 text-center">
+                <i data-feather="upload" class="w-10 h-10 mx-auto text-gray-300 mb-3"></i>
+                <p class="text-gray-200 font-medium">Drag & drop Excel file here or click to choose</p>
+                <p class="text-gray-400 text-sm mt-1">.xlsx / .xls supported</p>
+                <input id="excelFileInput" type="file" accept=".xlsx,.xls" class="hidden">
+            </div>
+
+            <div id="fileMeta" class="mt-4 hidden text-sm text-gray-300"></div>
+        </div>
+
+        <!-- Step 2: Assign Profile Pictures -->
+        <div class="glass-panel rounded-2xl p-6 mb-6" data-aos="fade-up" data-aos-delay="100">
+            <div class="flex items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-secondary-600/20 flex items-center justify-center">
+                        <i data-feather="image" class="w-5 h-5 text-secondary-400"></i>
+                    </div>
+                    <h2 class="text-xl font-semibold text-white">Step 2 — Assign Profile Pictures</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="btnAssignRandom" class="py-2 px-3 rounded bg-secondary-600/20 text-secondary-200 text-sm hover:bg-secondary-600/30">
+                        <i data-feather="shuffle" class="w-4 h-4 inline mr-1"></i> Randomize Placeholders
+                    </button>
+                    <button id="btnClearAllImages" class="py-2 px-3 rounded bg-gray-600/20 text-gray-200 text-sm hover:bg-gray-600/30">
+                        <i data-feather="trash" class="w-4 h-4 inline mr-1"></i> Clear All
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-gray-300 text-sm">
+                            <th class="p-3">Student</th>
+                            <th class="p-3">Phone</th>
+                            <th class="p-3">Department</th>
+                            <th class="p-3">Faculty</th>
+                            <th class="p-3">Picture</th>
+                            <th class="p-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTbody" class="divide-y divide-white/5"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Step 3: Import -->
+        <div class="glass-panel rounded-2xl p-6" data-aos="fade-up" data-aos-delay="150">
+            <div class="flex items-center justify-between gap-2 mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-primary-600/20 flex items-center justify-center">
+                        <i data-feather="database" class="w-5 h-5 text-primary-400"></i>
+                    </div>
+                    <h2 class="text-xl font-semibold text-white">Step 3 — Import to Firestore</h2>
+                </div>
+                <div class="text-sm text-gray-300">
+                    <span id="progressSummary">0 selected</span>
+                </div>
+            </div>
+
+            <div class="progress mb-3" aria-hidden="true">
+                <div id="overallProgress"></div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="btnImport" class="w-full md:w-auto py-3 px-6 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5">
+                    <span class="flex items-center justify-center gap-2">
+                        <i data-feather="upload-cloud" class="w-5 h-5"></i>
+                        <span>Import All to Firestore</span>
+                    </span>
+                </button>
+                <button id="btnReset" class="py-3 px-6 glass-panel rounded-lg hover:bg-white/10">
+                    <span class="flex items-center gap-2 text-gray-200">
+                        <i data-feather="refresh-ccw" class="w-4 h-4"></i>
+                        Reset
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed top-4 right-4 glass-panel rounded-lg p-3 text-sm text-white shadow-lg opacity-0 pointer-events-none transition-all duration-300">
+        <div class="flex items-center gap-2">
+            <i data-feather="check-circle" class="w-4 h-4 text-primary-400"></i>
+            <span id="toastText">Action completed</span>
+        </div>
+    </div>
+
+    <!-- Template Row -->
+    <template id="rowTemplate">
+        <tr class="row-card">
+            <td class="p-3">
+                <div class="font-medium text-white" data-role="name"></div>
+                <div class="text-xs text-gray-400" data-role="grad"></div>
+            </td>
+            <td class="p-3">
+                <span class="text-gray-200" data-role="phone"></span>
+            </td>
+            <td class="p-3">
+                <span class="text-gray-200" data-role="dept"></span>
+            </td>
+            <td class="p-3">
+                <span class="text-gray-200" data-role="faculty"></span>
+            </td>
+            <td class="p-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full overflow-hidden border border-white/10">
+                        <img data-role="preview" class="w-full h-full object-cover" src="" alt="">
+                    </div>
+                    <div>
+                        <label class="py-1.5 px-3 inline-flex items-center gap-2 rounded bg-primary-600/20 text-primary-200 cursor-pointer hover:bg-primary-600/30 text-sm">
+                            <i data-feather="camera" class="w-4 h-4"></i>
+                            <span>Choose</span>
+                            <input data-role="file" type="file" accept="image/*" class="hidden">
+                        </label>
+                        <button data-role="clear" class="ml-2 py-1.5 px-3 rounded bg-gray-600/20 text-gray-200 hover:bg-gray-600/30 text-sm">
+                            <i data-feather="trash" class="w-4 h-4 inline mr-1"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </td>
+            <td class="p-3">
+                <span data-role="status" class="text-xs text-gray-400">No image</span>
+            </td>
+        </tr>
+    </template>
+
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPV_mXojZBR-Dew8RuZSi9jv9X6rc_D90",
+            authDomain: "mentora-71f5c.firebaseapp.com",
+            projectId: "mentora-71f5c",
+            storageBucket: "mentora-71f5c.appspot.com",
+            messagingSenderId: "16685388211",
+            appId: "1:16685388211:web:7eed812660439dec7b3bc6",
+            measurementId: "G-BL98PXGK2G"
+        };
+
+        // App state
+        let db;
+        let students = []; // parsed Excel rows
+        const profileMap = new Map(); // id -> {file, dataUrl, status}
+
+        const defaultProfileSrc = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop';
+
+        // Utilities
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = toast.querySelector('i');
+            const text = document.getElementById('toastText');
+            text.textContent = message;
+            icon.className = 'w-4 h-4 ' + (type === 'error' ? 'text-red-400' : 'text-primary-400');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function normalizeHeader(h) {
+            return String(h || '')
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, '')
+                .replace(/[_\-]/g, '');
+        }
+
+        function sanitizeStudentData(raw) {
+            return {
+                fullName: raw.fullName || '',
+                phone: raw.phone || '',
+                department: raw.department || '',
+                faculty: raw.faculty || '',
+                graduatedFrom: raw.graduatedFrom || '',
+                grade: raw.grade || '',
+                city: raw.city || '',
+                education: raw.education || '',
+                gender: raw.gender || '',
+                bloodType: raw.bloodType || '',
+                age: parseInt(raw.age || 0, 10),
+                guardianPhone: raw.guardianPhone || '',
+                guardianName: raw.guardianName || '',
+                createdAt: new Date()
+            };
+        }
+
+        // Image handling
+        async function prepareImageDataForFirestore(file, options = {}) {
+            if (!file) return null;
+            const { maxDim = 512, quality = 0.82, mime = 'image/jpeg' } = options;
+            const dataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.onload = () => resolve(reader.result);
+                reader.readAsDataURL(file);
+            });
+            const img = await new Promise((resolve, reject) => {
+                const image = new Image();
+                image.onload = () => resolve(image);
+                image.onerror = () => reject(new Error('Failed to load image'));
+                image.src = dataUrl;
+            });
+            const { width, height } = img;
+            const maxSide = Math.max(width, height);
+            let targetW = width;
+            let targetH = height;
+            if (maxSide > maxDim) {
+                const scale = maxDim / maxSide;
+                targetW = Math.round(width * scale);
+                targetH = Math.round(height * scale);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = targetW;
+            canvas.height = targetH;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, targetW, targetH);
+            ctx.drawImage(img, 0, 0, targetW, targetH);
+            const outDataUrl = canvas.toDataURL(mime, quality);
+            return outDataUrl;
+        }
+
+        function getDataUrlByteLength(dataUrl) {
+            try {
+                const base64 = (dataUrl.split(',')[1] || '');
+                return base64 ? atob(base64).length : 0;
+            } catch (e) { return 0; }
+        }
+
+        async function handleProfileImageForStudent(studentId, file) {
+            if (!file) return null;
+            try {
+                const prepared = await prepareImageDataForFirestore(file, { maxDim: 512, quality: 0.82, mime: 'image/jpeg' });
+                const byteLength = getDataUrlByteLength(prepared);
+                const FIRESTORE_SAFE_BYTES = 900 * 1024; // ~900KB
+                if (byteLength > FIRESTORE_SAFE_BYTES) {
+                    showToast('Compressed image still too large for Firestore. Please choose a smaller image.', 'error');
+                    return null;
+                }
+                await db.collection('students').doc(studentId).update({
+                    profileImageData: prepared,
+                    profileImageName: file.name,
+                    profileImageType: file.type || 'image/jpeg',
+                    profileImageSize: file.size
+                });
+                return prepared;
+            } catch (err) {
+                console.error('Error storing profile image in Firestore:', err);
+                showToast('Failed to store profile image in Firestore.', 'error');
+                return null;
+            }
+        }
+
+        // Excel handling
+        function readExcel(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    try {
+                        const data = new Uint8Array(reader.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+                        resolve(rows);
+                    } catch (e) {
+                        reject(e);
+                    }
+                };
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function mapRowsToStudents(rows) {
+            const mapped = rows.map(r => {
+                const obj = {};
+                const keys = Object.keys(r);
+                keys.forEach(k => obj[normalizeHeader(k)] = r[k]);
+                return {
+                    fullName: obj.fullname || obj.name || '',
+                    phone: obj.phone || obj.phonenumber || '',
+                    department: obj.department || '',
+                    faculty: obj.faculty || '',
+                    graduatedFrom: obj.graduatedfrom || obj.school || '',
+                    grade: obj.grade || '',
+                    city: obj.city || '',
+                    education: obj.education || obj.educationlevel || '',
+                    gender: obj.gender || '',
+                    bloodType: obj.bloodtype || '',
+                    age: obj.age || '',
+                    guardianPhone: obj.guardianphone || '',
+                    guardianName: obj.guardianname || '',
+                    profileImageUrl: obj.profileimageurl || '',
+                    profileImageData: obj.profileimagedata || '',
+                    profileImageName: obj.profileimagename || '',
+                    profileImageType: obj.profileimagetype || '',
+                    profileImageSize: obj.profileimagesize || 0
+                };
+            });
+            const requiredFields = ['fullName', 'phone', 'department', 'faculty', 'graduatedFrom', 'grade', 'city', 'education', 'gender', 'bloodType', 'age', 'guardianPhone', 'guardianName'];
+            const invalidRows = mapped.filter(row => requiredFields.some(f => !row[f] || String(row[f]).trim() === ''));
+            if (invalidRows.length > 0) {
+                throw new Error(`${invalidRows.length} row(s) missing required fields.`);
+            }
+            return mapped;
+        }
+
+        // UI rendering
+        function renderTable(list) {
+            const tbody = document.getElementById('studentsTbody');
+            tbody.innerHTML = '';
+            const tpl = document.getElementById('rowTemplate');
+
+            list.forEach((s, idx) => {
+                const node = tpl.content.firstElementChild.cloneNode(true);
+                node.dataset.index = String(idx);
+                node.querySelector('[data-role="name"]').textContent = s.fullName || '—';
+                node.querySelector('[data-role="grad"]').textContent = `${s.graduatedFrom || ''} • ${s.grade || ''}`;
+                node.querySelector('[data-role="phone"]').textContent = s.phone || '—';
+                node.querySelector('[data-role="dept"]').textContent = s.department || '—';
+                node.querySelector('[data-role="faculty"]').textContent = s.faculty || '—';
+
+                const img = node.querySelector('[data-role="preview"]');
+                img.src = defaultProfileSrc;
+                img.alt = s.fullName;
+
+                const fileInput = node.querySelector('[data-role="file"]');
+                const clearBtn = node.querySelector('[data-role="clear"]');
+                const status = node.querySelector('[data-role="status"]');
+
+                fileInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    // Validate file
+                    const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+                    if (!validTypes.includes(file.type)) {
+                        showToast('Please select a valid image (JPEG, PNG, JPG, WEBP)', 'error');
+                        e.target.value = '';
+                        return;
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                        showToast('Image should be less than 5MB', 'error');
+                        e.target.value = '';
+                        return;
+                    }
+                    // Preview
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        img.src = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+
+                    // Update map
+                    profileMap.set(idx, { file, status: 'selected' });
+                    status.textContent = 'Selected';
+                    status.className = 'text-xs text-primary-300';
+                    updateSummary();
+                });
+
+                clearBtn.addEventListener('click', () => {
+                    fileInput.value = '';
+                    img.src = defaultProfileSrc;
+                    profileMap.delete(idx);
+                    status.textContent = 'No image';
+                    status.className = 'text-xs text-gray-400';
+                    updateSummary();
+                });
+
+                tbody.appendChild(node);
+            });
+        }
+
+        function updateSummary() {
+            const progressSummary = document.getElementById('progressSummary');
+            const total = students.length;
+            const selected = Array.from(profileMap.values()).filter(x => x && x.file).length;
+            progressSummary.textContent = `${selected}/${total} selected`;
+        }
+
+        // Import logic
+        async function importAll() {
+            if (!students.length) {
+                showToast('Please upload an Excel file first.', 'error');
+                return;
+            }
+            if (typeof db === 'undefined' || db === null) {
+                try {
+                    if (!firebase.apps.length) {
+                        firebase.initializeApp(firebaseConfig);
+                    }
+                    db = firebase.firestore();
+                } catch (err) {
+                    console.error('Firebase init failed', err);
+                    showToast('Firebase not initialized. Check console.', 'error');
+                    return;
+                }
+            }
+
+            // Validate files
+            const missing = students.reduce((acc, _, i) => {
+                if (!profileMap.has(i)) acc.push(i);
+                return acc;
+            }, []);
+            if (missing.length) {
+                const proceed = confirm(`You have ${missing.length} student(s) without a picture. Continue?`);
+                if (!proceed) return;
+            }
+
+            const btn = document.getElementById('btnImport');
+            btn.disabled = true;
+            btn.innerHTML = `<span class="flex items-center justify-center gap-2"><span>Importing...</span><div class="w-4 h-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin"></div></span>`;
+
+            const overallBar = document.getElementById('overallProgress');
+            let done = 0;
+
+            try {
+                // Save documents and attach images
+                for (let i = 0; i < students.length; i++) {
+                    const s = sanitizeStudentData(students[i]);
+                    // Create document first
+                    const ref = db.collection('students').doc();
+                    const studentId = ref.id;
+                    await ref.set(s);
+
+                    // Attach image if any
+                    const mapping = profileMap.get(i);
+                    if (mapping && mapping.file) {
+                        await handleProfileImageForStudent(studentId, mapping.file);
+                        setRowStatus(i, 'Uploaded', 'text-xs text-emerald-300');
+                    } else {
+                        setRowStatus(i, 'No image', 'text-xs text-gray-400');
+                    }
+
+                    done++;
+                    const pct = Math.round((done / students.length) * 100);
+                    overallBar.style.width = pct + '%';
+                    await new Promise(r => setTimeout(r, 50));
+                }
+                showToast(`Imported ${done} student(s) to Firestore.`);
+            } catch (err) {
+                console.error(err);
+                showToast('Import failed. See console for details.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span class="flex items-center justify-center gap-2">
+                    <i data-feather="upload-cloud" class="w-5 h-5"></i>
+                    <span>Import All to Firestore</span>
+                </span>`;
+                if (window.feather) feather.replace();
+            }
+        }
+
+        function setRowStatus(index, text, cls) {
+            const row = document.querySelector(`tr[data-index="${index}"]`);
+            if (!row) return;
+            const el = row.querySelector('[data-role="status"]');
+            el.textContent = text;
+            el.className = cls;
+        }
+
+        // Randomize placeholders (assigns different Unsplash portraits to rows)
+        function randomizePlaceholders() {
+            const faces = [
+                'https://images.unsplash.com/photo-1544725176-7c40e5a2c9f1?q=80&w=200&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=200&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?q=80&w=200&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=200&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?q=80&w=200&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1519340241574-2cec6aef0c01?q=80&w=200&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=200&auto=format&fit=crop'
+            ];
+            const tbody = document.getElementById('studentsTbody');
+            Array.from(tbody.querySelectorAll('tr')).forEach((tr, idx) => {
+                const img = tr.querySelector('[data-role="preview"]');
+                img.src = faces[idx % faces.length];
+                const status = tr.querySelector('[data-role="status"]');
+                status.textContent = 'Placeholder';
+                status.className = 'text-xs text-secondary-300';
+            });
+            showToast('Assigned random placeholder images (for preview only).');
+        }
+
+        // Clear all images
+        function clearAllImages() {
+            const tbody = document.getElementById('studentsTbody');
+            Array.from(tbody.querySelectorAll('tr')).forEach((tr) => {
+                const img = tr.querySelector('[data-role="preview"]');
+                img.src = defaultProfileSrc;
+                const status = tr.querySelector('[data-role="status"]');
+                status.textContent = 'No image';
+                status.className = 'text-xs text-gray-400';
+                tr.querySelector('[data-role="file"]').value = '';
+            });
+            profileMap.clear();
+            updateSummary();
+            showToast('Cleared all images.');
+        }
+
+        // Reset page
+        function resetPage() {
+            students = [];
+            profileMap.clear();
+            document.getElementById('studentsTbody').innerHTML = '';
+            document.getElementById('fileMeta').classList.add('hidden');
+            document.getElementById('fileMeta').innerHTML = '';
+            const dz = document.getElementById('dropZone');
+            dz.classList.remove('dragover');
+            document.getElementById('overallProgress').style.width = '0%';
+            updateSummary();
+            showToast('Reset complete.');
+        }
+
+        // Download sample
+        function downloadSample() {
+            const sample = [
+                {
+                    fullName: 'Amina Ali',
+                    phone: '252612345678',
+                    department: 'technology',
+                    faculty: 'Bachelor of Computer Science (Software Engineering)',
+                    graduatedFrom: 'Hargeisa University',
+                    grade: 'A',
+                    city: 'Hargeisa',
+                    education: "Bachelor's Degree",
+                    gender: 'Female',
+                    bloodType: 'O+',
+                    age: '22',
+                    guardianPhone: '252631112233',
+                    guardianName: 'Ali Mohamed'
+                },
+                {
+                    fullName: 'Mohamed Ahmed',
+                    phone: '252661112233',
+                    department: 'business',
+                    faculty: 'Bachelor of Business Administration',
+                    graduatedFrom: 'Burao College',
+                    grade: 'B+',
+                    city: 'Burao',
+                    education: "Bachelor's Degree",
+                    gender: 'Male',
+                    bloodType: 'A+',
+                    age: '24',
+                    guardianPhone: '252612223344',
+                    guardianName: 'Ahmed Hassan'
+                }
+            ];
+            const ws = XLSX.utils.json_to_sheet(sample);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Students');
+            XLSX.writeFile(wb, 'sample_students.xlsx');
+        }
+
+        // Event bindings
+        function bindEvents() {
+            const dz = document.getElementById('dropZone');
+            const fileInput = document.getElementById('excelFileInput');
+            dz.addEventListener('click', () => fileInput.click());
+            dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+            dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+            dz.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                dz.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) await handleExcelFile(file);
+            });
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) await handleExcelFile(file);
+            });
+
+            document.getElementById('btnImport').addEventListener('click', importAll);
+            document.getElementById('btnReset').addEventListener('click', resetPage);
+            document.getElementById('btnAssignRandom').addEventListener('click', randomizePlaceholders);
+            document.getElementById('btnClearAllImages').addEventListener('click', clearAllImages);
+            document.getElementById('btnDownloadSample').addEventListener('click', downloadSample);
+        }
+
+        async function handleExcelFile(file) {
+            try {
+                const rows = await readExcel(file);
+                const mapped = mapRowsToStudents(rows);
+                students = mapped;
+                renderTable(students);
+                profileMap.clear();
+                updateSummary();
+
+                const meta = document.getElementById('fileMeta');
+                meta.classList.remove('hidden');
+                meta.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i data-feather="file" class="w-4 h-4 text-emerald-400"></i>
+                        <span class="text-emerald-300">${file.name}</span>
+                        <span class="text-gray-400">•</span>
+                        <span class="text-gray-300">${rows.length} row(s) loaded</span>
+                    </div>
+                `;
+                if (window.feather) feather.replace();
+                showToast('Excel loaded. Assign images then import.');
+            } catch (err) {
+                console.error(err);
+                showToast(err.message || 'Failed to read Excel.', 'error');
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.feather) feather.replace();
+            AOS.init();
+            bindEvents();
+            updateSummary();
+
+            // Preload default icon states
+            gsap.from('.glass-panel', { opacity: 0, y: 12, duration: 0.5, stagger: 0.05, ease: 'power2.out' });
+        });
+    </script>
+</body>
+</html>

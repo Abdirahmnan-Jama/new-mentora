@@ -364,11 +364,16 @@ input[type="number"] { -moz-appearance: textfield; }
                             <i data-feather="star" class="absolute left-4 top-4 text-fuchsia-400 z-10"></i>
                             <select name="grade" required class="form-input pl-12 appearance-none">
                                 <option value="" disabled selected>Select Grade</option>
-                                <option>1st Class Honors</option>
-                                <option>2nd Class Upper</option>
-                                <option>2nd Class Lower</option>
-                                <option>3rd Class</option>
-                                <option>Pass</option>
+                                <option>A+</option>
+                                <option>A</option>
+                                <option>A-</option>
+                                <option>B+</option>
+                                <option>B-</option>
+                                <option>C+</option>
+                                <option>C</option>
+                                <option>C-</option>
+                                <option>D</option>
+                                <option>F</option>
                             </select>
                             <i data-feather="chevron-down" class="absolute right-4 top-4 text-gray-400 pointer-events-none"></i>
                         </div>
@@ -478,60 +483,7 @@ input[type="number"] { -moz-appearance: textfield; }
             </div>
         </div>
 
-        <div class="quick-actions-wrap">
-        <div class="glass-panel rounded-2xl p-4 w-[300px]">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="icon-wrap bg-primary/15 text-primary"><i data-feather="zap"></i></div>
-                <div>
-                    <div class="font-semibold text-white">Quick Actions</div>
-                  <div class="text-xs text-slate-400">Bulk ops & tools</div>
-                </div>
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <button id="btnImport" class="action-btn w-full">
-                    <i data-feather="upload-cloud" class="w-4 h-4"></i>
-                    <span>Import</span>
-                </button>
-                <button id="btnExport" class="action-btn w-full">
-                    <i data-feather="download-cloud" class="w-4 h-4"></i>
-                    <span>Export</span>
-                </button>
-            </div>
-
-            <input type="file" id="bulkFileInput" accept=".xlsx,.xls,.csv" class="hidden" />
-
-            <!-- System Health -->
-             <section class="glass rounded-2xl p-4 mt-4">
-                <div class="flex items-center gap-3">
-                    <div class="icon-wrap bg-primary/15 text-primary"><i data-feather="activity"></i></div>
-                    <div>
-                        <div class="font-semibold text-white">System Health</div>
-                        <div class="text-xs text-slate-400">Realtime telemetry</div>
-                    </div>
-                </div>
-                <div class="mt-4 space-y-3">
-                    <div class="flex items-center justify-between">
-                        <div class="text-sm text-slate-300">Server Load</div>
-                        <div class="text-sm font-semibold" id="serverLoad">--%</div>
-                    </div>
-                    <div class="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-                        <div id="serverBar" class="h-full bg-gradient-to-r from-emerald-400 to-cyan-400 w-[35%]"></div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3 mt-3">
-                        <div class="bg-white/5 rounded-lg p-3">
-                            <div class="text-xs text-slate-400">Latency</div>
-                            <div class="text-lg font-semibold" id="latency">-- ms</div>
-                        </div>
-                        <div class="bg-white/5 rounded-lg p-3">
-                            <div class="text-xs text-slate-400">Uptime</div>
-                            <div class="text-lg font-semibold" id="uptime">--d</div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </div>
+       
       
     </div>
 
